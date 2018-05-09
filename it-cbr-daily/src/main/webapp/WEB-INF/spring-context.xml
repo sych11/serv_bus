@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:context="http://www.springframework.org/schema/context"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans classpath:org/springframework/beans/factory/xml/spring-beans-3.2.xsd
+			http://www.springframework.org/schema/context classpath:org/springframework/context/config/spring-context-3.2.xsd">
+
+
+	<context:property-placeholder location="file:./etc/it.base.config.cfg" />
+	
+	<bean id="propertiesService" class="org.prof_itgroup.it_cbr_daily.PropertiesServiceImpl" />
+	
+	<bean id="jndiTemplate" class="org.springframework.jndi.JndiTemplate" />
+	
+	<bean id="jmsConnectionFactory" class="org.springframework.jndi.JndiObjectFactoryBean">
+		<property name="jndiTemplate" ref="jndiTemplate" />
+		<property name="jndiName" value="#{propertiesService.get('connectionfactory')}" />
+		<property name="cache" value="true" />
+		<property name="proxyInterface" value="javax.jms.ConnectionFactory" />
+	</bean>
+	
+	
+	<bean id="jmsDestinationResolver" class="org.springframework.jms.support.destination.DynamicDestinationResolver"/>
+	
+	<bean id="jmsTemplate" class="org.springframework.jms.core.JmsTemplate">
+		<property name="connectionFactory">
+			<ref bean="jmsConnectionFactory" />
+		</property>
+		<property name="destinationResolver">
+			<ref bean="jmsDestinationResolver" />
+		</property>
+		<property name="pubSubDomain" value="true"/>
+	</bean>
+	
+	<bean id="jmsSender" class="org.it.utils.jms.JmsTemplateSenderImpl">
+		<constructor-arg index="0" ref="jmsTemplate" />
+	</bean>
+	
+	<bean id="httpService" class="org.it.utils.http.HttpRestServiceImpl"/>
+	
+	<bean id="cbrTimer" class="org.prof_itgroup.it_cbr_daily.CbrTimer" destroy-method="close">
+		<constructor-arg index="0" ref="propertiesService"/>
+		<constructor-arg index="1" ref="httpService"/>
+		<constructor-arg index="2" ref="jmsSender"/>
+	</bean>
+	
+	
+
+</beans>

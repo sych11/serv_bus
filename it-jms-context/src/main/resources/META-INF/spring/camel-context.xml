@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	   xmlns:camel="http://camel.apache.org/schema/spring"
+	xmlns:osgi="http://www.springframework.org/schema/osgi"
+	   xmlns:osgix="http://www.springframework.org/schema/osgi-compendium"
+	   xmlns:context="http://www.springframework.org/schema/context"
+	xsi:schemaLocation="
+       http://www.springframework.org/schema/osgi-compendium
+       http://www.springframework.org/schema/osgi-compendium/spring-osgi-compendium.xsd
+       http://www.springframework.org/schema/context
+       http://www.springframework.org/schema/context/spring-context.xsd
+       http://www.springframework.org/schema/beans
+       http://www.springframework.org/schema/beans/spring-beans.xsd
+       http://www.springframework.org/schema/osgi
+       http://www.springframework.org/schema/osgi/spring-osgi.xsd
+       http://camel.apache.org/schema/spring
+       http://camel.apache.org/schema/spring/camel-spring.xsd">
+       
+    <context:property-placeholder location="file:./etc/it.base.config.cfg" />
+
+	<bean id="jmsConnectionFactory" class="org.apache.activemq.ActiveMQConnectionFactory">
+		<property name="brokerURL" value="${brokerURL}" />
+		<property name="userName" value="${activemq.jmx.user}" />
+		<property name="password" value="${activemq.jmx.password}" />
+	</bean>
+	
+	<bean id="queuePooledConnectionFactory" class="org.apache.activemq.pool.PooledConnectionFactory" destroy-method="stop">
+		<property name="idleTimeout" value="0" />
+		<property name="connectionFactory" ref="jmsConnectionFactory" />
+	</bean>
+	
+	<osgi:service id="connectionFactory" ref="queuePooledConnectionFactory" interface="javax.jms.ConnectionFactory">
+		<osgi:service-properties>
+			<entry key="osgi.jndi.service.name" value="jms/mq" />
+		</osgi:service-properties>
+	</osgi:service>
+	
+	
+	
+</beans>
